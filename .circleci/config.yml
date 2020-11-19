@@ -13,6 +13,7 @@ executors:
         environment:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: password
+          POSTGRES_DB: theodinproject_test
     working_directory: ~/theodinproject
 
 jobs:

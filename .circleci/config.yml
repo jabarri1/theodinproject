@@ -7,13 +7,10 @@ executors:
       - image: circleci/ruby:2.6.6-stretch-node-browsers-legacy
         environment:
           RAILS_ENV: test
-          PGHOST: localhost
-          PGUSER: theodinproject
       - image: circleci/postgres:12.2-ram
         environment:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: password
-          POSTGRES_DB: theodinproject_test
     working_directory: ~/theodinproject
 
 jobs:

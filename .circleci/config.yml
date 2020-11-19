@@ -1,35 +1,44 @@
+---
 version: 2.1
-jobs:
-  build:
-    working_directory: ~/theodinproject
+
+executors:
+  rails-executor:
     docker:
-      - image: circleci/2.6.6-stretch-node
+      - image: ytborg/ruby2.6-node-browsers-legacy
         environment:
+          RAILS_ENV: test
           PGHOST: localhost
           PGUSER: theodinproject
-          RAILS_ENV: test
       - image: circleci/postgres:12.2-ram
         environment:
-          POSTGRES_USER: theodinproject
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: password
           POSTGRES_DB: theodinproject_test
-          POSTGRES_PASSWORD: ""
+    working_directory: ~/theodinproject
+
+jobs:
+  rspec:
+    executor: rails-executor
     steps:
       - checkout
 
+      # Install bundler
+      - run: gem install bundler
+
       # Restore Cached Dependencies
-      - type: cache-restore
-        name: Restore bundle cache
-        key: theodinproject-{{ checksum "Gemfile.lock" }}
+      - restore_cache:
+          name: Restore bundle cache
+          key: theodinproject-{{ checksum "Gemfile.lock" }}
 
       # Bundle install dependencies
       - run: bundle install --path vendor/bundle
 
       # Cache Dependencies
-      - type: cache-save
-        name: Store bundle cache
-        key: theodinproject-{{ checksum "Gemfile.lock" }}
-        paths:
-          - vendor/bundle
+      - save_cache:
+          name: Store bundle cache
+          key: theodinproject-{{ checksum "Gemfile.lock" }}
+          paths:
+            - vendor/bundle
 
       # Wait for DB
       - run: dockerize -wait tcp://localhost:5432 -timeout 1m
@@ -40,5 +49,41 @@ jobs:
       # Run the tests
       - run: bundle exec rspec
 
+  linters:
+    executor: rails-executor
+    steps:
+      - checkout
+
+      # Install bundler
+      - run: gem install bundler
+
+      # Restore Cached Dependencies
+      - restore_cache:
+          name: Restore bundle cache
+          key: theodinproject-{{ checksum "Gemfile.lock" }}
+
+      # Bundle install dependencies
+      - run: bundle install --path vendor/bundle
+
+      # Cache Dependencies
+      - save_cache:
+          name: Store bundle cache
+          key: theodinproject-{{ checksum "Gemfile.lock" }}
+          paths:
+            - vendor/bundle
+
+      # Wait for DB
+      - run: dockerize -wait tcp://localhost:5432 -timeout 1m
+
+      # Setup the database
+      - run: bundle exec rake db:setup
+
       # Run the tests
-      - run: bundle exec rubocop
+      - run: bundle exec rubcop
+
+workflows:
+  version: 2
+  build_and_test:
+    jobs:
+      - rspec
+      - linters

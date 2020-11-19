@@ -4,7 +4,7 @@ version: 2.1
 executors:
   rails-executor:
     docker:
-      - image: ytborg/ruby2.6-node-browsers-legacy
+      - image: circleci/2.6.6-stretch-node
         environment:
           RAILS_ENV: test
           PGHOST: localhost
@@ -79,7 +79,7 @@ jobs:
       - run: bundle exec rake db:setup
 
       # Run the tests
-      - run: bundle exec rubcop
+      - run: bundle exec rubocop
 
 workflows:
   version: 2
